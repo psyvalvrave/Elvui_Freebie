@@ -33,5 +33,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Elvui_Freebie-EXE
+          name: Elvui_Freebie
           path: dist/Elvui_Freebie.exe

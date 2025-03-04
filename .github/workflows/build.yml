@@ -1,0 +1,37 @@
+name: Build EXE with PyInstaller
+
+on:
+  # Trigger this workflow when you push a tag that starts with 'v' 
+  # (e.g., v1.0, v2.3.1) or when you manually run it from GitHub Actions tab.
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # or any Python 3.x version
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller pyqt5
+
+      - name: Build the EXE
+        run: |
+          python -m PyInstaller --onefile --windowed Elvui_Freebie.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Elvui_Freebie-EXE
+          path: dist/Elvui_Freebie.exe

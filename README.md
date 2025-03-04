@@ -5,8 +5,9 @@
 ## How to Use 
 
 ### Initial Setup
-1. **Select the Download Directory:** On first use, manually set your download directory (typically `C:\Users\<Your Username>\Downloads`).
-2. **Set the Output Directory:** Manually select your World of Warcraft Addon folder as the output directory. This is usually located at `World of Warcraft\_retail_\Interface\AddOns`.
+1. **Run the Code:** Yes, run the code in your machine with terminal or IDE. 
+2. **Select the Download Directory:** On first use, manually set your download directory (typically `C:\Users\<Your Username>\Downloads`).
+3. **Set the Output Directory:** Manually select your World of Warcraft Addon folder as the output directory. This is usually located at `World of Warcraft\_retail_\Interface\AddOns`.
 
    If you are unsure where your WoW installation is, open the Battle.net app, navigate to the World of Warcraft page, and click the gear icon in the bottom left corner to open settings. Click "Show in Explorer" to display your WoW folder.<br />
 

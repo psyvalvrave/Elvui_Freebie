@@ -31,7 +31,7 @@ jobs:
           python -m PyInstaller --onefile --windowed Elvui_Freebie.py
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Elvui_Freebie-EXE
           path: dist/Elvui_Freebie.exe

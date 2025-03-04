@@ -40,7 +40,7 @@ class App(QWidget):
         browseSourceBtn = QPushButton('Browse Source')
         browseSourceBtn.clicked.connect(self.browse_directory)
 
-        sourceLayout.addWidget(QLabel('Select Source Directory:'))
+        sourceLayout.addWidget(QLabel('Select Source Directory (Where your Elvui Zip is):'))
         sourceLayout.addWidget(self.pathEntry)
         sourceLayout.addWidget(browseSourceBtn)
 
@@ -49,7 +49,7 @@ class App(QWidget):
         browseOutputBtn = QPushButton('Browse Output')
         browseOutputBtn.clicked.connect(self.browse_output_directory)
 
-        outputLayout.addWidget(QLabel('Select Output Directory:'))
+        outputLayout.addWidget(QLabel('Select Output Directory (Your WOW Addon Directory):'))
         outputLayout.addWidget(self.outputPathEntry)
         outputLayout.addWidget(browseOutputBtn)
 

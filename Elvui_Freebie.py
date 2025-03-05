@@ -11,7 +11,7 @@ def load_config():
         with open(config_file, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        return {'last_directory': '', 'last_extraction_path': ''}
+        return {'last_directory': '', 'last_extraction_path': '', 'last_extracted_version': ''}
 
 def save_config(config):
     with open(config_file, 'w') as f:
@@ -24,23 +24,23 @@ class App(QWidget):
         self.config = load_config()
         self.pathEntry.setText(self.config.get('last_directory', ''))
         self.outputPathEntry.setText(self.config.get('last_extraction_path', ''))
-        self.scan_directory(self.config.get('last_directory', ''))
-
+        self.versionLabel.setText("Last extracted version: " + self.config.get('last_extracted_version', 'None'))
+        self.scan_directory(self.config.get('last_directory', ''))  
     def initUI(self):
-        self.setWindowTitle('Zip Extractor')
+        self.setWindowTitle('Elvui Freebie')
 
         # Layouts
         mainLayout = QVBoxLayout()
         sourceLayout = QHBoxLayout()
         outputLayout = QHBoxLayout()
-        #listLayout = QVBoxLayout()
+        versionLayout = QHBoxLayout()
 
         # Source directory components
         self.pathEntry = QLineEdit()
         browseSourceBtn = QPushButton('Browse Source')
         browseSourceBtn.clicked.connect(self.browse_directory)
 
-        sourceLayout.addWidget(QLabel('Select Source Directory (Where your Elvui Zip is):'))
+        sourceLayout.addWidget(QLabel('Select Source Directory:'))
         sourceLayout.addWidget(self.pathEntry)
         sourceLayout.addWidget(browseSourceBtn)
 
@@ -49,9 +49,13 @@ class App(QWidget):
         browseOutputBtn = QPushButton('Browse Output')
         browseOutputBtn.clicked.connect(self.browse_output_directory)
 
-        outputLayout.addWidget(QLabel('Select Output Directory (Your WOW Addon Directory):'))
+        outputLayout.addWidget(QLabel('Select Output Directory:'))
         outputLayout.addWidget(self.outputPathEntry)
         outputLayout.addWidget(browseOutputBtn)
+
+        # Version display
+        self.versionLabel = QLabel("Last extracted version: None")
+        versionLayout.addWidget(self.versionLabel)
 
         # File list
         self.fileList = QListWidget()
@@ -65,10 +69,12 @@ class App(QWidget):
         mainLayout.addWidget(QLabel('ElvUI Zip Files:'))
         mainLayout.addWidget(self.fileList)
         mainLayout.addLayout(outputLayout)
+        mainLayout.addLayout(versionLayout)
         mainLayout.addWidget(extractBtn)
 
         self.setLayout(mainLayout)
         self.setGeometry(300, 300, 600, 400)
+
 
     def browse_directory(self):
         directory = QFileDialog.getExistingDirectory(self, 'Select Directory', self.pathEntry.text())
@@ -100,6 +106,11 @@ class App(QWidget):
             zip_path = os.path.join(input_directory, item.text())
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(output_directory)
+            # Save the version extracted
+            version_name = os.path.splitext(item.text())[0]
+            self.config['last_extracted_version'] = version_name
+            save_config(self.config)
+            self.versionLabel.setText("Last extracted version: " + version_name)
         QMessageBox.information(self, 'Success', 'Selected files extracted')
 
 if __name__ == '__main__':

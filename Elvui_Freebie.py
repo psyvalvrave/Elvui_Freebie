@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import (
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 CONFIG_FILE = 'config_Elvui_Freebie.json'
 
@@ -37,10 +38,13 @@ def check_online_version():
     extracts the version number, and returns it as a string.
     Returns None if something goes wrong (couldn't parse, etc.).
     """
+    options = Options()
+    options.add_argument("--headless")  
+    options.add_argument("--disable-gpu")
     url = "https://tukui.org/elvui"
     try:
         service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service)
+        driver = webdriver.Chrome(service=service, options=options)
         driver.get(url)
 
         download_button = driver.find_element(By.ID, "download-button")
@@ -61,11 +65,6 @@ def check_online_version():
 
 class App(QWidget):
     def __init__(self, config, online_version, is_newer):
-        """
-        :param config: The loaded config dict
-        :param online_version: The version string we found online (or None if not found)
-        :param is_newer: Boolean indicating if the online version is newer than local
-        """
         super().__init__()
         self.config = config
         self.online_version = online_version

@@ -2,40 +2,106 @@ import sys
 import os
 import zipfile
 import json
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QListWidget, QFileDialog, QMessageBox)
 
-config_file = 'config_Elvui_Freebie.json'
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+    QLineEdit, QListWidget, QFileDialog, QMessageBox
+)
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+
+CONFIG_FILE = 'config_Elvui_Freebie.json'
+
 
 def load_config():
+    """Load config values from JSON, or return defaults if not found."""
     try:
-        with open(config_file, 'r') as f:
+        with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return {'last_directory': '', 'last_extraction_path': '', 'last_extracted_version': ''}
 
+
 def save_config(config):
-    with open(config_file, 'w') as f:
+    """Save config values to JSON."""
+    with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f)
 
+
+def check_online_version():
+    """
+    Opens https://tukui.org/elvui, finds the download button,
+    extracts the version number, and returns it as a string.
+    Returns None if something goes wrong (couldn't parse, etc.).
+    """
+    url = "https://tukui.org/elvui"
+    try:
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service)
+        driver.get(url)
+
+        download_button = driver.find_element(By.ID, "download-button")
+        button_text = download_button.text 
+
+        driver.quit()
+
+        if "ELVUI" in button_text.upper():
+            version_number = button_text.split()[-1]  
+            return version_number
+        else:
+            return None
+
+    except Exception as e:
+        print(f"An error occurred while checking the online version: {e}")
+        return None
+
+
 class App(QWidget):
-    def __init__(self):
+    def __init__(self, config, online_version, is_newer):
+        """
+        :param config: The loaded config dict
+        :param online_version: The version string we found online (or None if not found)
+        :param is_newer: Boolean indicating if the online version is newer than local
+        """
         super().__init__()
+        self.config = config
+        self.online_version = online_version
+        self.is_newer = is_newer
+
         self.initUI()
-        self.config = load_config()
+
         self.pathEntry.setText(self.config.get('last_directory', ''))
         self.outputPathEntry.setText(self.config.get('last_extraction_path', ''))
-        self.versionLabel.setText("Last extracted version: " + self.config.get('last_extracted_version', 'None'))
-        self.scan_directory(self.config.get('last_directory', ''))  
+
+        last_extracted = self.config.get('last_extracted_version', 'None')
+        self.versionLabel.setText(f"Last extracted version: {last_extracted}")
+
+        if self.online_version is None:
+            self.updateLabel.setText("Could not determine the ElvUI version.")
+        elif self.is_newer:
+            self.updateLabel.setText(
+                f"<span style='color:red; font-weight:bold;'>"
+                f"New ElvUI version available: {self.online_version}</span>"
+            )
+        else:
+            self.updateLabel.setText("You have the latest version of ElvUI installed.")
+
+        self.scan_directory(self.config.get('last_directory', ''))
+
     def initUI(self):
         self.setWindowTitle('Elvui Freebie')
 
-        # Layouts
         mainLayout = QVBoxLayout()
         sourceLayout = QHBoxLayout()
         outputLayout = QHBoxLayout()
         versionLayout = QHBoxLayout()
 
-        # Source directory components
+        self.updateLabel = QLabel("")
+        mainLayout.addWidget(self.updateLabel)
+
         self.pathEntry = QLineEdit()
         browseSourceBtn = QPushButton('Browse Source')
         browseSourceBtn.clicked.connect(self.browse_directory)
@@ -44,7 +110,6 @@ class App(QWidget):
         sourceLayout.addWidget(self.pathEntry)
         sourceLayout.addWidget(browseSourceBtn)
 
-        # Output directory components
         self.outputPathEntry = QLineEdit()
         browseOutputBtn = QPushButton('Browse Output')
         browseOutputBtn.clicked.connect(self.browse_output_directory)
@@ -53,18 +118,14 @@ class App(QWidget):
         outputLayout.addWidget(self.outputPathEntry)
         outputLayout.addWidget(browseOutputBtn)
 
-        # Version display
         self.versionLabel = QLabel("Last extracted version: None")
         versionLayout.addWidget(self.versionLabel)
 
-        # File list
         self.fileList = QListWidget()
 
-        # Extract button
         extractBtn = QPushButton('Extract Selected')
         extractBtn.clicked.connect(self.extract_zip)
 
-        # Adding widgets to the main layout
         mainLayout.addLayout(sourceLayout)
         mainLayout.addWidget(QLabel('ElvUI Zip Files:'))
         mainLayout.addWidget(self.fileList)
@@ -74,7 +135,6 @@ class App(QWidget):
 
         self.setLayout(mainLayout)
         self.setGeometry(300, 300, 600, 400)
-
 
     def browse_directory(self):
         directory = QFileDialog.getExistingDirectory(self, 'Select Directory', self.pathEntry.text())
@@ -94,7 +154,7 @@ class App(QWidget):
     def scan_directory(self, directory):
         if directory:
             files = os.listdir(directory)
-            zip_files = [file for file in files if file.endswith('.zip') and file.startswith('elvui')]
+            zip_files = [file for file in files if file.endswith('.zip') and file.lower().startswith('elvui')]
             self.fileList.clear()
             self.fileList.addItems(zip_files)
 
@@ -102,19 +162,44 @@ class App(QWidget):
         selected_items = self.fileList.selectedItems()
         input_directory = self.pathEntry.text()
         output_directory = self.outputPathEntry.text()
+
         for item in selected_items:
             zip_path = os.path.join(input_directory, item.text())
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(output_directory)
-            # Save the version extracted
-            version_name = os.path.splitext(item.text())[0]
+
+            filename_no_ext = os.path.splitext(item.text())[0]
+            version_name = filename_no_ext.replace("elvui-", "")
+
             self.config['last_extracted_version'] = version_name
             save_config(self.config)
+
             self.versionLabel.setText("Last extracted version: " + version_name)
+
         QMessageBox.information(self, 'Success', 'Selected files extracted')
 
-if __name__ == '__main__':
+
+def main():
+    config = load_config()
+
+    last_local_version = config.get('last_extracted_version', '0.0')
+
+    online_version = check_online_version()
+
+    is_newer = False
+    if online_version:
+        try:
+            if float(online_version) > float(last_local_version):
+                is_newer = True
+        except ValueError:
+            if online_version != last_local_version:
+                is_newer = True
+
     app = QApplication(sys.argv)
-    ex = App()
+    ex = App(config, online_version, is_newer)
     ex.show()
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()

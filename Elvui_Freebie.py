@@ -2,6 +2,7 @@ import sys
 import os
 import zipfile
 import json
+import time
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
@@ -18,7 +19,6 @@ CONFIG_FILE = 'config_Elvui_Freebie.json'
 
 
 def load_config():
-    """Load config values from JSON, or return defaults if not found."""
     try:
         with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
@@ -124,7 +124,11 @@ class App(QWidget):
 
         extractBtn = QPushButton('Extract Selected')
         extractBtn.clicked.connect(self.extract_zip)
-
+        
+        downloadOnlineBtn = QPushButton('Download Latest Online')
+        downloadOnlineBtn.clicked.connect(self.download_online)
+        
+        mainLayout.addWidget(downloadOnlineBtn)
         mainLayout.addLayout(sourceLayout)
         mainLayout.addWidget(QLabel('ElvUI Zip Files:'))
         mainLayout.addWidget(self.fileList)
@@ -176,6 +180,28 @@ class App(QWidget):
             self.versionLabel.setText("Last extracted version: " + version_name)
 
         QMessageBox.information(self, 'Success', 'Selected files extracted')
+        
+    def download_online(self):
+        """
+        Uses Selenium in headless mode to trigger the download of the latest ElvUI zip.
+        The download folder is set in the Chrome options.
+        """
+        try:
+            options = Options()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
+            driver.get("https://tukui.org/elvui")
+            download_button = driver.find_element(By.ID, "download-button")
+            download_button.click()  
+            time.sleep(3)  
+            driver.quit()
+            QMessageBox.information(self, "Download", "Download initiated and (hopefully) completed.")
+            self.scan_directory(self.config.get('last_directory', ''))
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"An error occurred during download: {e}")
 
 
 def main():

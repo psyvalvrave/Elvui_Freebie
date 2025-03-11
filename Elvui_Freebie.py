@@ -6,7 +6,7 @@ import time
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QLineEdit, QListWidget, QFileDialog, QMessageBox, QProgressDialog
+    QLineEdit, QListWidget, QFileDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
@@ -137,7 +137,11 @@ class App(QWidget):
         downloadOnlineBtn = QPushButton('Download Latest Online')
         downloadOnlineBtn.clicked.connect(self.download_online)
         
+        checkUpdateBtn = QPushButton('Re-check Update')
+        checkUpdateBtn.clicked.connect(self.check_update)
+        
         mainLayout.addWidget(downloadOnlineBtn)
+        mainLayout.addWidget(checkUpdateBtn)
         mainLayout.addLayout(sourceLayout)
         mainLayout.addWidget(QLabel('ElvUI Zip Files:'))
         mainLayout.addWidget(self.fileList)
@@ -195,6 +199,7 @@ class App(QWidget):
         wait_box = QMessageBox(self)
         wait_box.setWindowTitle("Please Wait")
         wait_box.setText("Downloading new version, please wait...")
+        wait_box.setStandardButtons(QMessageBox.NoButton)
         wait_box.setWindowModality(Qt.ApplicationModal)
         wait_box.show()
         QApplication.processEvents()
@@ -242,7 +247,38 @@ class App(QWidget):
                     )
                 else:
                     self.updateLabel.setText("You have the latest version of ElvUI installed.")
-        
+    
+    def check_update(self):
+        """Show a message box while re-checking the online version, then update the UI."""
+        wait_box = QMessageBox(self)
+        wait_box.setWindowTitle("Please Wait")
+        wait_box.setText("Checking for updates, please wait...")
+        wait_box.setWindowModality(Qt.ApplicationModal)
+        wait_box.show()
+        QApplication.processEvents()
+
+        online_version = check_online_version()
+        wait_box.close()
+
+        self.online_version = online_version
+        last_local = self.config.get('last_extracted_version', '0.0')
+        if online_version is None:
+            self.updateLabel.setText("Could not determine the ElvUI version.")
+        else:
+            try:
+                if float(online_version) > float(last_local):
+                    self.updateLabel.setText(
+                        f"<span style='color:red; font-weight:bold;'>New ElvUI version available: {online_version}</span>"
+                    )
+                else:
+                    self.updateLabel.setText("You have the latest version of ElvUI installed.")
+            except ValueError:
+                if online_version != last_local:
+                    self.updateLabel.setText(
+                        f"<span style='color:red; font-weight:bold;'>New ElvUI version available: {online_version}</span>"
+                    )
+                else:
+                    self.updateLabel.setText("You have the latest version of ElvUI installed.")
             
         
             

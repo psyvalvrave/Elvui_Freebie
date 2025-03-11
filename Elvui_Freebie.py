@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QLineEdit, QListWidget, QFileDialog, QMessageBox, QProgressDialog
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -63,13 +63,23 @@ def check_online_version():
         print(f"An error occurred while checking the online version: {e}")
         return None
 
+class UpdateChecker(QThread):
+    # Signal to emit the online version string (empty string if none)
+    updateChecked = pyqtSignal(str)
+
+    def run(self):
+        online_ver = check_online_version()
+        if online_ver is None:
+            self.updateChecked.emit("")  
+        else:
+            self.updateChecked.emit(online_ver)
 
 class App(QWidget):
-    def __init__(self, config, online_version, is_newer):
+    def __init__(self, config):
         super().__init__()
         self.config = config
-        self.online_version = online_version
-        self.is_newer = is_newer
+        self.online_version = None  
+        self.is_newer = False
 
         self.initUI()
 
@@ -79,17 +89,15 @@ class App(QWidget):
         last_extracted = self.config.get('last_extracted_version', 'None')
         self.versionLabel.setText(f"Last extracted version: {last_extracted}")
 
-        if self.online_version is None:
-            self.updateLabel.setText("Could not determine the ElvUI version.")
-        elif self.is_newer:
-            self.updateLabel.setText(
-                f"<span style='color:red; font-weight:bold;'>"
-                f"New ElvUI version available: {self.online_version}</span>"
-            )
-        else:
-            self.updateLabel.setText("You have the latest version of ElvUI installed.")
+         # Initially assume no update (or unknown) and update UI immediately
+        self.updateLabel.setText("You have the latest version of ElvUI installed.")
 
         self.scan_directory(self.config.get('last_directory', ''))
+        
+        # Start asynchronous update check
+        self.checker = UpdateChecker()
+        self.checker.updateChecked.connect(self.onUpdateChecked)
+        self.checker.start()
 
     def initUI(self):
         self.setWindowTitle('Elvui Freebie')
@@ -213,6 +221,27 @@ class App(QWidget):
             self.scan_directory(self.config.get('last_directory', ''))
         except Exception as e:
             QMessageBox.warning(self, "Error", f"An error occurred during download: {e}")
+            
+    def onUpdateChecked(self, online_ver):
+        self.online_version = online_ver
+        last_local = self.config.get('last_extracted_version', '0.0')
+        if online_ver == "":
+            self.updateLabel.setText("Could not determine the ElvUI version.")
+        else:
+            try:
+                if float(online_ver) > float(last_local):
+                    self.updateLabel.setText(
+                        f"<span style='color:red; font-weight:bold;'>New ElvUI version available: {online_ver}</span>"
+                    )
+                else:
+                    self.updateLabel.setText("You have the latest version of ElvUI installed.")
+            except ValueError:
+                if online_ver != last_local:
+                    self.updateLabel.setText(
+                        f"<span style='color:red; font-weight:bold;'>New ElvUI version available: {online_ver}</span>"
+                    )
+                else:
+                    self.updateLabel.setText("You have the latest version of ElvUI installed.")
         
             
         
@@ -224,21 +253,8 @@ class App(QWidget):
 def main():
     config = load_config()
 
-    last_local_version = config.get('last_extracted_version', '0.0')
-
-    online_version = check_online_version()
-
-    is_newer = False
-    if online_version:
-        try:
-            if float(online_version) > float(last_local_version):
-                is_newer = True
-        except ValueError:
-            if online_version != last_local_version:
-                is_newer = True
-
     app = QApplication(sys.argv)
-    ex = App(config, online_version, is_newer)
+    ex = App(config)
     ex.show()
     sys.exit(app.exec_())
 

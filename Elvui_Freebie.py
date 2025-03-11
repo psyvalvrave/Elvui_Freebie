@@ -6,8 +6,9 @@ import time
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QLineEdit, QListWidget, QFileDialog, QMessageBox
+    QLineEdit, QListWidget, QFileDialog, QMessageBox, QProgressDialog
 )
+from PyQt5.QtCore import Qt
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -182,11 +183,20 @@ class App(QWidget):
         QMessageBox.information(self, 'Success', 'Selected files extracted')
         
     def download_online(self):
+        """Shows a message box while downloading the latest version online."""
+        wait_box = QMessageBox(self)
+        wait_box.setWindowTitle("Please Wait")
+        wait_box.setText("Downloading new version, please wait...")
+        wait_box.setWindowModality(Qt.ApplicationModal)
+        wait_box.show()
+        QApplication.processEvents()
+        
         """
         Uses Selenium in headless mode to trigger the download of the latest ElvUI zip.
         The download folder is set in the Chrome options.
         """
         try:
+            # Set up Chrome in headless mode
             options = Options()
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
@@ -198,10 +208,17 @@ class App(QWidget):
             download_button.click()  
             time.sleep(3)  
             driver.quit()
+            wait_box.close()
             QMessageBox.information(self, "Download", "Download initiated and (hopefully) completed.")
             self.scan_directory(self.config.get('last_directory', ''))
         except Exception as e:
             QMessageBox.warning(self, "Error", f"An error occurred during download: {e}")
+        
+            
+        
+            
+
+    
 
 
 def main():

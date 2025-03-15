@@ -192,6 +192,10 @@ class App(QWidget):
 
             self.versionLabel.setText("Last extracted version: " + version_name)
 
+        self.checker = UpdateChecker()
+        self.checker.updateChecked.connect(self.onUpdateChecked)
+        self.checker.start()
+        
         QMessageBox.information(self, 'Success', 'Selected files extracted')
         
     def download_online(self):
@@ -199,7 +203,7 @@ class App(QWidget):
         wait_box = QMessageBox(self)
         wait_box.setWindowTitle("Please Wait")
         wait_box.setText("Downloading new version, please wait...")
-        wait_box.setStandardButtons(QMessageBox.NoButton)
+        wait_box.setStandardButtons(QMessageBox.Ok)
         wait_box.setWindowModality(Qt.ApplicationModal)
         wait_box.show()
         QApplication.processEvents()

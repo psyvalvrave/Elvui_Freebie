@@ -3,6 +3,7 @@ import os
 import zipfile
 import json
 import time
+import re
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
@@ -64,7 +65,7 @@ def check_online_version():
         return None
 
 class UpdateChecker(QThread):
-    # Signal to emit the online version string (empty string if none)
+    #Signal to emit the online version string (empty string if none)
     updateChecked = pyqtSignal(str)
 
     def run(self):
@@ -89,12 +90,12 @@ class App(QWidget):
         last_extracted = self.config.get('last_extracted_version', 'None')
         self.versionLabel.setText(f"Last extracted version: {last_extracted}")
 
-         # Initially assume no update (or unknown) and update UI immediately
+         #Initially assume no update (or unknown) and update UI immediately
         self.updateLabel.setText("You have the latest version of ElvUI installed.")
 
         self.scan_directory(self.config.get('last_directory', ''))
         
-        # Start asynchronous update check
+        #Start asynchronous update check
         self.checker = UpdateChecker()
         self.checker.updateChecked.connect(self.onUpdateChecked)
         self.checker.start()
@@ -178,25 +179,42 @@ class App(QWidget):
         selected_items = self.fileList.selectedItems()
         input_directory = self.pathEntry.text()
         output_directory = self.outputPathEntry.text()
-
+    
         for item in selected_items:
             zip_path = os.path.join(input_directory, item.text())
+            # Extract the contents of the zip file
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(output_directory)
-
+            
             filename_no_ext = os.path.splitext(item.text())[0]
             version_name = filename_no_ext.replace("elvui-", "")
-
+            match = re.search(r"(\d+\.\d+)", filename_no_ext, re.IGNORECASE)
+            if match:
+                version_name = match.group(1)  
+            else:
+                #Fallback in case regex fails: remove the prefix and extra characters
+                version_name = filename_no_ext.replace("elvui-", "").strip()
             self.config['last_extracted_version'] = version_name
             save_config(self.config)
-
             self.versionLabel.setText("Last extracted version: " + version_name)
+            
+            #Ask user if they want to delete the zip file
+            reply = QMessageBox.question(
+                self,
+                "Delete File",
+                f"Do you want to delete {item.text()} after extraction?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                try:
+                    os.remove(zip_path)
+                except Exception as e:
+                    QMessageBox.warning(self, "Error", f"Could not delete {item.text()}: {e}")
+    
+        QMessageBox.information(self, 'Success', 'Selected files extracted.')
+        #Update file list to remove deleted files
+        self.scan_directory(input_directory)
 
-        self.checker = UpdateChecker()
-        self.checker.updateChecked.connect(self.onUpdateChecked)
-        self.checker.start()
-        
-        QMessageBox.information(self, 'Success', 'Selected files extracted')
         
     def download_online(self):
         """Shows a message box while downloading the latest version online."""
@@ -213,7 +231,7 @@ class App(QWidget):
         The download folder is set in the Chrome options.
         """
         try:
-            # Set up Chrome in headless mode
+            #Set up Chrome in headless mode
             options = Options()
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")

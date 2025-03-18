@@ -210,6 +210,10 @@ class App(QWidget):
                     os.remove(zip_path)
                 except Exception as e:
                     QMessageBox.warning(self, "Error", f"Could not delete {item.text()}: {e}")
+        #Start asynchronous update check once extraction
+        self.checker = UpdateChecker()
+        self.checker.updateChecked.connect(self.onUpdateChecked)
+        self.checker.start()
     
         QMessageBox.information(self, 'Success', 'Selected files extracted.')
         #Update file list to remove deleted files

@@ -1,8 +1,6 @@
-name: Build EXE with PyInstaller
+name: Build EXE with Nuitka
 
 on:
-  # Trigger this workflow when you push a tag that starts with 'v' 
-  # (e.g., v1.0, v2.3.1) or when you manually run it from GitHub Actions tab.
   push:
     tags:
       - 'v*'
@@ -19,19 +17,20 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'  # or any Python 3.x version
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pyinstaller pyqt5
+          pip install nuitka pyqt5 selenium webdriver-manager
 
-      - name: Build the EXE
+      - name: Build the EXE with Nuitka
         run: |
-          python -m PyInstaller --onefile --windowed Elvui_Freebie.py
+          python -m nuitka --standalone --plugin-enable=pyqt5 --windows-console-mode=disable --assume-yes-for-downloads Elvui_Freebie.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Elvui_Freebie
-          path: dist/Elvui_Freebie.exe
+          # Nuitka standalone builds produce a folder named Elvui_Freebie.dist
+          path: Elvui_Freebie.dist

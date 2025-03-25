@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import (
     QLineEdit, QListWidget, QFileDialog, QFrame, QDialog, QStyle
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon
+
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -273,6 +275,10 @@ class App(QWidget):
         
         titleBarLayout = QHBoxLayout(self.titleBar)
         titleBarLayout.setContentsMargins(0, 0, 0, 0)
+        
+        icon_label = QLabel(self)
+        icon_label.setPixmap(QIcon("Elvui_Freebie_icon.png").pixmap(24, 24))
+        titleBarLayout.addWidget(icon_label)
         
         self.titleLabel = QLabel("Elvui Freebie", self.titleBar)
         titleBarLayout.addWidget(self.titleLabel)

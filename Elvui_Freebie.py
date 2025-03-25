@@ -7,7 +7,7 @@ import re
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QLineEdit, QListWidget, QFileDialog, QMessageBox, QFrame, QDialog, QStyle
+    QLineEdit, QListWidget, QFileDialog, QFrame, QDialog, QStyle
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
@@ -472,10 +472,10 @@ class App(QWidget):
             time.sleep(3)  
             driver.quit()
             wait_box.close()
-            QMessageBox.information(self, "Download", "Download initiated and (hopefully) completed.")
+            self.show_custom_message("Download", "Download initiated and (hopefully) completed.", "information")
             self.scan_directory(self.config.get('last_directory', ''))
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"An error occurred during download: {e}")
+            self.show_custom_message("Error", f"An error occurred during download: {e}", "critical")
             
     def onUpdateChecked(self, online_ver):
         """Check is new update available on official website"""

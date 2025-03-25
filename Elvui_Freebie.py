@@ -7,7 +7,7 @@ import re
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QLineEdit, QListWidget, QFileDialog, QMessageBox
+    QLineEdit, QListWidget, QFileDialog, QMessageBox, QFrame, QDialog, QStyle
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
@@ -18,6 +18,29 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 CONFIG_FILE = 'config_Elvui_Freebie.json'
+
+BOX_STYLE = """
+    #titleBar {
+        background-color: #2b2b2b;
+    }
+    QLabel {
+        color: #ffffff;
+        font-size: 14px;
+    }
+    QPushButton {
+        background-color: #3c3f41;
+        border: none;
+        color: #ffffff;
+        padding: 5px;
+        border-radius: 4px;
+    }
+    QPushButton:hover {
+        background-color: #4e5254;
+    }
+    QDialog {
+        background-color: #2b2b2b;
+    }
+"""
 
 
 def load_config():
@@ -74,6 +97,142 @@ class UpdateChecker(QThread):
             self.updateChecked.emit("")  
         else:
             self.updateChecked.emit(online_ver)
+            
+class CustomMessageBox(QDialog):
+    def __init__(self, parent=None, title="Message", text="", icon_type=None, buttons=True):
+        super().__init__(parent)
+        self.icon_type = icon_type
+        #Remove the native title bar by using FramelessWindowHint
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setModal(True)
+        self.initUI(title, text, buttons)
+        
+    def initUI(self, title, text, buttons):
+        layout = QVBoxLayout(self)
+        titleBar = QWidget(self)
+        titleBar.setObjectName("titleBar")
+        titleBarLayout = QHBoxLayout(titleBar)
+        titleBarLayout.setContentsMargins(5, 5, 5, 5)
+        
+        self.titleLabel = QLabel(title, titleBar)
+        titleBarLayout.addWidget(self.titleLabel)
+        
+        titleBarLayout.addStretch(1)
+        
+        btnClose = QPushButton("X", titleBar)
+        btnClose.setObjectName("btnClose")
+        btnClose.setFixedSize(30, 30)
+        btnClose.clicked.connect(self.close)
+        titleBarLayout.addWidget(btnClose)
+        
+        layout.addWidget(titleBar)
+        
+        line = QFrame(self)
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setStyleSheet("background-color: white;")
+        line.setFixedHeight(2)
+        layout.addWidget(line)
+        
+        #Message area with optional icon
+        messageLayout = QHBoxLayout()
+        if self.icon_type:
+            icon = None
+            itype = self.icon_type.lower()
+            if itype == "information":
+                icon = self.style().standardIcon(QStyle.SP_MessageBoxInformation)
+            elif itype == "warning":
+                icon = self.style().standardIcon(QStyle.SP_MessageBoxWarning)
+            elif itype == "critical":
+                icon = self.style().standardIcon(QStyle.SP_MessageBoxCritical)
+            elif itype == "question":
+                icon = self.style().standardIcon(QStyle.SP_MessageBoxQuestion)
+            
+            if icon:
+                icon_label = QLabel(self)
+                icon_label.setPixmap(icon.pixmap(48, 48))
+                icon_label.setContentsMargins(10, 0, 0, 0)
+                messageLayout.addWidget(icon_label)
+                
+        messageLayout.addStretch(1) 
+        messageLabel = QLabel(text, self)
+        messageLabel.setWordWrap(True)
+        messageLabel.setContentsMargins(0, 0, 20, 0)
+        messageLayout.addWidget(messageLabel)
+        layout.addLayout(messageLayout)
+
+        if buttons:
+            btnOk = QPushButton("OK", self)
+            btnOk.clicked.connect(self.accept)
+            btnLayout = QHBoxLayout()
+            btnLayout.addStretch(1)
+            btnLayout.addWidget(btnOk)
+            layout.addLayout(btnLayout)
+        
+        self.setStyleSheet(BOX_STYLE)
+        
+class CustomQuestionBox(QDialog):
+    def __init__(self, parent=None, title="Question", text=""):
+        super().__init__(parent)
+        # Remove native window frame for a custom look
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setModal(True)
+        self.initUI(title, text)
+        
+    def initUI(self, title, text):
+        layout = QVBoxLayout(self)
+        
+        #Custom title bar
+        titleBar = QWidget(self)
+        titleBar.setObjectName("titleBar")
+        titleBarLayout = QHBoxLayout(titleBar)
+        titleBarLayout.setContentsMargins(5, 5, 5, 5)
+        
+        self.titleLabel = QLabel(title, titleBar)
+        titleBarLayout.addWidget(self.titleLabel)
+        titleBarLayout.addStretch(1)
+        
+        #Only close button in the title bar
+        btnClose = QPushButton("X", titleBar)
+        btnClose.setFixedSize(30, 30)
+        btnClose.clicked.connect(self.reject)
+        titleBarLayout.addWidget(btnClose)
+        
+        layout.addWidget(titleBar)
+        
+        line = QFrame(self)
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setStyleSheet("background-color: white;")
+        line.setFixedHeight(2)
+        layout.addWidget(line)
+        
+        messageLayout = QHBoxLayout()
+        icon = self.style().standardIcon(QStyle.SP_MessageBoxQuestion)
+        icon_label = QLabel(self)
+        icon_label.setPixmap(icon.pixmap(48, 48))
+        icon_label.setContentsMargins(10, 0, 0, 0)
+        messageLayout.addWidget(icon_label)
+        
+        #Message text
+        messageLabel = QLabel(text, self)
+        messageLabel.setWordWrap(True)
+        messageLabel.setContentsMargins(0, 0, 20, 0)
+        messageLayout.addWidget(messageLabel)
+        layout.addLayout(messageLayout)
+        
+        #Buttons layout
+        btnLayout = QHBoxLayout()
+        btnLayout.addStretch(1)
+        btnYes = QPushButton("Yes", self)
+        btnYes.clicked.connect(self.accept)
+        btnLayout.addWidget(btnYes)
+        btnNo = QPushButton("No", self)
+        btnNo.clicked.connect(self.reject)
+        btnLayout.addWidget(btnNo)
+        layout.addLayout(btnLayout)
+        
+        self.setStyleSheet(BOX_STYLE)
 
 class App(QWidget):
     def __init__(self, config):
@@ -120,25 +279,31 @@ class App(QWidget):
         
         titleBarLayout.addStretch(1)
         
-        # Minimize Button
+        #Minimize Button.
         self.btnMin = QPushButton("-", self.titleBar)
         self.btnMin.setObjectName("btnMinimize")
         self.btnMin.clicked.connect(self.showMinimized)
         titleBarLayout.addWidget(self.btnMin)
 
-        # Maximize/Restore Button
+        #Maximize/Restore Button
         self.btnMax = QPushButton("⬜", self.titleBar)
         self.btnMax.setObjectName("btnMaximize")
         self.btnMax.clicked.connect(self.toggleMaxRestore)
         titleBarLayout.addWidget(self.btnMax)
 
-        # Close Button
+        #Close Button
         self.btnClose = QPushButton("X", self.titleBar)
         self.btnClose.setObjectName("btnClose")
         self.btnClose.clicked.connect(self.close)
         titleBarLayout.addWidget(self.btnClose)
-
+        
         mainLayout.addWidget(self.titleBar)
+        line = QFrame(self)
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setStyleSheet("background-color: white;") 
+        line.setFixedHeight(2)
+        mainLayout.addWidget(line)
 
         self.updateLabel = QLabel("")
         mainLayout.addWidget(self.updateLabel)
@@ -190,6 +355,33 @@ class App(QWidget):
 
         self.setLayout(mainLayout)
         self.setGeometry(300, 300, 600, 400)
+        
+    def show_custom_message(parent, title, text, icon_type="information"):
+        """
+        Displays a custom message box with an OK button.
+        Blocks until the user clicks OK.
+        """
+        dialog = CustomMessageBox(parent, title, text, icon_type, buttons=True)
+        dialog.exec_()
+        
+    def show_wait_message(parent, title, text, buttons=False):
+        """
+        Displays a custom message box without any interactive buttons.
+        Returns the dialog instance so that it can be closed programmatically.
+        """
+        dialog = CustomMessageBox(parent, title, text, buttons=False)
+        dialog.show()
+        QApplication.processEvents()  
+        return dialog
+        
+    def show_custom_question(parent, title, text):
+        """
+        Displays a question message box with yes and no options.
+        Returns QDialog.Accepted (Yes) or QDialog.Rejected (No)
+        """
+        dialog = CustomQuestionBox(parent, title, text)
+        result = dialog.exec_() 
+        return result
 
     def browse_directory(self):
         """Check the last source directory"""
@@ -239,39 +431,29 @@ class App(QWidget):
             self.config['last_extracted_version'] = version_name
             save_config(self.config)
             self.versionLabel.setText("Last extracted version: " + version_name)
+            self.show_custom_message('Success', 'Selected files extracted.')
             
             #Ask user if they want to delete the zip file
-            reply = QMessageBox.question(
-                self,
-                "Delete File",
-                f"Do you want to delete {item.text()} after extraction?",
-                QMessageBox.Yes | QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
+            result = self.show_custom_question("Delete File", f"Extraction finished. Do you want to delete {item.text()} now?")
+            if result == QDialog.Accepted:
                 try:
                     os.remove(zip_path)
                 except Exception as e:
-                    QMessageBox.warning(self, "Error", f"Could not delete {item.text()}: {e}")
+                    self.show_custom_message("Error", f"Could not delete {item.text()}: {e}", "critical")
+                    
         #Start asynchronous update check once extraction
         self.checker = UpdateChecker()
         self.checker.updateChecked.connect(self.onUpdateChecked)
         self.checker.start()
     
-        QMessageBox.information(self, 'Success', 'Selected files extracted.')
         #Update file list to remove deleted files
         self.scan_directory(input_directory)
 
         
     def download_online(self):
         """Shows a message box while downloading the latest version online."""
-        wait_box = QMessageBox(self)
-        wait_box.setWindowTitle("Please Wait")
-        wait_box.setText("Downloading new version, please wait...")
-        wait_box.setStandardButtons(QMessageBox.Ok)
-        wait_box.setWindowModality(Qt.ApplicationModal)
-        wait_box.show()
-        QApplication.processEvents()
-        
+        wait_box = self.show_wait_message("Please Wait", "Downloading new version, please wait...")
+   
         """
         Uses Selenium in headless mode to trigger the download of the latest ElvUI zip.
         The download folder is set in the Chrome options.
@@ -319,13 +501,7 @@ class App(QWidget):
     
     def check_update(self):
         """Show a message box while re-checking the online version, then update the UI."""
-        wait_box = QMessageBox(self)
-        wait_box.setWindowTitle("Please Wait")
-        wait_box.setText("Checking for updates, please wait...")
-        wait_box.setWindowModality(Qt.ApplicationModal)
-        wait_box.show()
-        QApplication.processEvents()
-
+        wait_box = self.show_wait_message("Please Wait", "Checking for updates, please wait...")
         online_version = check_online_version()
         wait_box.close()
 
@@ -397,9 +573,8 @@ class App(QWidget):
     def mousePressEvent(self, event):
         """Remember the position of the mouse for window dragging."""
         if event.button() == Qt.LeftButton:
-            if event.pos().y() <= self.titleBar.height():
-                self.dragPos = event.globalPos() - self.frameGeometry().topLeft()
-                event.accept()
+            self.dragPos = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
 
     def mouseMoveEvent(self, event):
         """Move the window as the mouse moves."""

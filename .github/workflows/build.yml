@@ -31,5 +31,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Elvui_Freebie
-          # Nuitka standalone builds produce a folder named Elvui_Freebie.dist
+          # Nuitka standalone builds produce a folder named main.dist
           path: main.dist

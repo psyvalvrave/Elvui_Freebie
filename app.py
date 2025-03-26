@@ -123,7 +123,7 @@ class App(QWidget):
         titleBarLayout.setContentsMargins(0, 0, 0, 0)
         
         icon_label = QLabel(self)
-        icon_label.setPixmap(QIcon("Elvui_Freebie_icon.png").pixmap(24, 24))
+        icon_label.setPixmap(QIcon("Elvui_Freebie_icon.ico").pixmap(24, 24))
         titleBarLayout.addWidget(icon_label)
         
         self.titleLabel = QLabel("Elvui Freebie", self.titleBar)

@@ -32,4 +32,4 @@ jobs:
         with:
           name: Elvui_Freebie
           # Nuitka standalone builds produce a folder named Elvui_Freebie.dist
-          path: Elvui_Freebie.dist
+          path: main.dist

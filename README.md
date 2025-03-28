@@ -28,12 +28,12 @@
 ### Initial Setup
 1. **Download the Build:**  
    Download the latest build artifact from GitHub Actions.  
-   https://github.com/psyvalvrave/Elvui_Freebie/actions/runs/14090822253/artifacts/2826229035
+   https://github.com/psyvalvrave/Elvui_Freebie/actions/runs/14139422384/artifacts/2842577329
 
-2. **Extract and Run:**  
+3. **Extract and Run:**  
    Unzip the downloaded folder and run `Elvui_Freebie.exe`.
 
-3. **Configure Directories:**  
+4. **Configure Directories:**  
    - **Source Directory:** On first use, set your download directory (typically `C:\Users\<Your Username>\Downloads`).
    - **Output Directory:** Manually select your World of Warcraft AddOn folder (usually `World of Warcraft\_retail_\Interface\AddOns`).  
      *Tip:* If you're unsure where your WoW installation is located, open the Battle.net app, navigate to the WoW page, and click the gear icon (bottom left) to access settings. Choose "Show in Explorer" to reveal your installation folder.

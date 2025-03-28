@@ -2,7 +2,7 @@
 
 **Elvui_Freebie** is a streamlined tool designed for World of Warcraft players to quickly download and install the ElvUI addon from [Tukui](https://tukui.org/elvui). Unlike the official installer—which requires an ElvUI Patreon subscription for accelerated downloads similar to CurseForge—Elvui_Freebie allows users to bypass these restrictions. Developed as a cost-effective solution by a student, this tool scans your default download directory for ElvUI zip files, auto-detects new versions, and seamlessly extracts them directly into your WoW AddOn folder. This simplifies the update process, reducing manual effort and saving time with each new release.
 
-> **Note:**  
+> **Screenshot:**  
 ![Elvui_Freebie](https://github.com/user-attachments/assets/cc2cf663-ebef-4f68-aa84-505195535d76)
 
 

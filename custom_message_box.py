@@ -14,7 +14,7 @@ class CustomMessageBox(QDialog):
         """
         super().__init__(parent)
         self.icon_type = icon_type
-        # Remove native title bar to allow a custom title bar
+        #Remove native title bar to allow a custom title bar
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.setModal(True)
         self.initUI(title, text, buttons)
@@ -22,7 +22,6 @@ class CustomMessageBox(QDialog):
     def initUI(self, title, text, buttons):
         layout = QVBoxLayout(self)
         
-        # Custom title bar
         titleBar = QWidget(self)
         titleBar.setObjectName("titleBar")
         titleBarLayout = QHBoxLayout(titleBar)
@@ -40,7 +39,6 @@ class CustomMessageBox(QDialog):
         
         layout.addWidget(titleBar)
         
-        # Separator line
         line = QFrame(self)
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
@@ -48,7 +46,7 @@ class CustomMessageBox(QDialog):
         line.setFixedHeight(2)
         layout.addWidget(line)
         
-        # Message area with optional icon
+        #Message area with optional icon
         messageLayout = QHBoxLayout()
         messageLayout.setContentsMargins(0, 0, 0, 0)
         messageLayout.setSpacing(5)
@@ -67,8 +65,7 @@ class CustomMessageBox(QDialog):
             
             if icon:
                 icon_label = QLabel(self)
-                # Adjust size here; for example, 24x24
-                icon_label.setPixmap(icon.pixmap(24, 24))
+                icon_label.setPixmap(icon.pixmap(48, 48))
                 icon_label.setContentsMargins(0, 0, 0, 0)
                 icon_label.setAlignment(Qt.AlignVCenter)
                 messageLayout.addWidget(icon_label)

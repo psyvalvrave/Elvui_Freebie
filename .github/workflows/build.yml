@@ -26,7 +26,7 @@ jobs:
 
       - name: Build the EXE with Nuitka
         run: |
-          python -m nuitka --standalone --plugin-enable=pyqt5 --windows-console-mode=disable --assume-yes-for-downloads --windows-icon-from-ico=Elvui_Freebie_icon.ico --output-filename=Elvui_Freebie.exe main.py
+          python -m nuitka --standalone --plugin-enable=pyqt5 --windows-console-mode=disable --assume-yes-for-downloads --windows-icon-from-ico=Elvui_Freebie_icon.ico --include-data-file=Elvui_Freebie_icon.ico=Elvui_Freebie_icon.ico --output-filename=Elvui_Freebie.exe main.py
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

@@ -248,9 +248,14 @@ class App(QWidget):
         """Check the last output directory"""
         directory = QFileDialog.getExistingDirectory(self, 'Select Directory', self.outputPathEntry.text())
         if directory:
-            self.config['last_extraction_path'] = directory
-            save_config(self.config)
-            self.outputPathEntry.setText(directory)
+            if not directory.endswith('/Interface/AddOns'):
+                self.show_custom_message("Invalid Directory", "The selected directory does not end with /Interface/AddOns.\n"
+                "Please select the correct directory.", "critical")
+                return  #Exit the function; user must re-trigger the action.
+                #Update configuration and UI if valid.
+                self.config['last_extraction_path'] = directory
+                save_config(self.config)
+                self.outputPathEntry.setText(directory)
 
     def scan_directory(self, directory):
         """Scan the downloading directory to find elvui related zip file"""

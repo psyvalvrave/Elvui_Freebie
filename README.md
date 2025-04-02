@@ -28,7 +28,7 @@
 ### Initial Setup
 1. **Download the Build:**  
    Download the latest build artifact from GitHub Actions.  
-   https://github.com/psyvalvrave/Elvui_Freebie/actions/runs/14139422384/artifacts/2842577329
+   https://github.com/psyvalvrave/Elvui_Freebie/actions/runs/14139417214/artifacts/2870783451
 
 3. **Extract and Run:**  
    Unzip the downloaded folder and run `Elvui_Freebie.exe`.
